@@ -1,5 +1,6 @@
 import {Dimensions} from 'react-native';
-import {THRESHOLD} from './constants';
+import {MCQ_URL, REVEAL_ANSWER_URL, THRESHOLD} from './constants';
+import {Dispatch, SetStateAction} from 'react';
 
 const {width, height} = Dimensions.get('screen');
 
@@ -47,12 +48,31 @@ export const meetsSwipeCriteria = (
   }
 };
 
-export const slicer = (
-  array: IQuestion[],
-  currentIndex: number,
-  size: number = 4,
-): IQuestion[] => {
-  if (currentIndex === 0) return array.slice(0, 2);
+export const fetchMCQ = async (
+  updateMcq: Dispatch<SetStateAction<IQuestion[]>>,
+  updateFetchCount: Dispatch<SetStateAction<number>>,
+): Promise<void> => {
+  try {
+    const response = await fetch(MCQ_URL);
+    const data: IMCQ = await response.json();
+    const answer: ICorrectAnswer | [] = await revealAnswer(data.id);
+    updateMcq(mcqs => [
+      ...mcqs,
+      {...data, answer, user_choice: {id: '', answer: ''}} as IQuestion,
+    ]);
+    updateFetchCount(fetchedCount => fetchedCount + 1);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-  return array.slice(currentIndex - 1, currentIndex + (size - 1));
+const revealAnswer = async (mcqId: number): Promise<ICorrectAnswer | []> => {
+  try {
+    const response = await fetch(REVEAL_ANSWER_URL + mcqId);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };

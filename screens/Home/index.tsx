@@ -12,13 +12,15 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import FlashCard from '../../components/FlashCard';
-import {CARD_HEIGHT} from '../../utils/constants';
+import {
+  CARD_HEIGHT,
+  MCQ_URL,
+  REVEAL_ANSWER_URL,
+  THRESHOLD,
+} from '../../utils/constants';
 import Header from '../../components/Header';
 import Loader from '../../components/Loader';
-
-const THRESHOLD = CARD_HEIGHT * 0.25;
-const MCQ_URL = 'https://cross-platform.rp.devfactory.com/for_you';
-const REVEAL_ANSWER_URL = 'https://cross-platform.rp.devfactory.com/reveal?id=';
+import {fetchMCQ} from '../../utils/helpers';
 
 const timingConfig = {
   easing: Easing.out(Easing.linear),
@@ -33,32 +35,6 @@ export default function Home() {
 
   const [mcqs, setMcqs] = useState<IQuestion[]>([]);
   const [fetchedCount, setFetchedCount] = useState(0);
-
-  const fetchMCQ = async (): Promise<void> => {
-    try {
-      const response = await fetch(MCQ_URL);
-      const data: IMCQ = await response.json();
-      const answer: ICorrectAnswer | [] = await revealAnswer(data.id);
-      setMcqs(mcqs => [
-        ...mcqs,
-        {...data, answer, user_choice: {id: '', answer: ''}} as IQuestion,
-      ]);
-      setFetchedCount(fetchedCount + 1);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const revealAnswer = async (mcqId: number): Promise<ICorrectAnswer | []> => {
-    try {
-      const response = await fetch(REVEAL_ANSWER_URL + mcqId);
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  };
 
   const onChoice = (option: IOption, index: number) => {
     const _mcqs = [...mcqs];
@@ -76,7 +52,6 @@ export default function Home() {
         !(currentIndex.value === 0 && translationY > 0)
       ) {
         flashCardPosition.value = currentHeight.value + translationY;
-        return;
       }
     })
     .onFinalize(({translationY}) => {
@@ -116,7 +91,7 @@ export default function Home() {
 
   useDerivedValue(() => {
     if (fetchedCount - currentIndex.value <= BUFFER_SIZE) {
-      runOnJS(fetchMCQ)();
+      runOnJS(fetchMCQ)(setMcqs, setFetchedCount);
     }
   }, [fetchedCount]);
 

@@ -1,4 +1,4 @@
-import React, {Dispatch, SetStateAction} from 'react';
+import React from 'react';
 import {View, Text, ImageBackground, Dimensions, Pressable} from 'react-native';
 
 import styles from './styles';

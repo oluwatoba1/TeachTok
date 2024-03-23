@@ -10,3 +10,6 @@ export const CARD_HEIGHT =
 export const THRESHOLD = CARD_HEIGHT * 0.25;
 
 export const BASE_PADDING = 10;
+
+export const MCQ_URL = 'https://cross-platform.rp.devfactory.com/for_you';
+export const REVEAL_ANSWER_URL = 'https://cross-platform.rp.devfactory.com/reveal?id=';
